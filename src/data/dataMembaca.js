@@ -288,8 +288,8 @@ export const DATA_KONSONAN = [
       {
         besar: "JI",
         kecil: "ji",
-        kataContoh: "Jerapah",
-        gambarUrl: "/images/jerapah.png",
+        kataContoh: "Jin",
+        gambarUrl: "/images/jin.png",
       },
       {
         besar: "JU",
@@ -559,8 +559,8 @@ export const DATA_KONSONAN = [
       {
         besar: "RE",
         kecil: "re",
-        kataContoh: "Kereta",
-        gambarUrl: "/images/kereta.png",
+        kataContoh: "Rebung",
+        gambarUrl: "/images/rebung.png",
       },
       {
         besar: "RO",
