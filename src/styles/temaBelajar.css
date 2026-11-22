@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap");
+
+:root {
+  --bg-gradasi: linear-gradient(135deg, #fffbeb 0%, #f0f9ff 50%, #fff1f2 100%);
+  --font-utama: "Fredoka", "Nunito", sans-serif;
+  --teks-utama: #1e293b;
+  --teks-redup: #64748b;
+  --bingkai-cerah: #fde68a;
+}
+
+@keyframes membal {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.tema-belajar-wrapper {
+  min-height: 100vh;
+  background: var(--bg-gradasi);
+  color: var(--teks-utama);
+  font-family: var(--font-utama);
+  padding-bottom: 3rem;
+}
+
+.tema-belajar-wrapper ::selection {
+  background-color: #fde68a;
+}
+
+.kartu-ceria {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-radius: 1.75rem;
+  box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.kartu-game-pilihan:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -10px rgba(15, 23, 42, 0.14);
+  animation: membal 0.55s ease-in-out;
+}
+
+.tombol-3d {
+  border-bottom-width: 4px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.tombol-3d:active {
+  border-bottom-width: 0;
+  transform: translateY(3px);
+}
+
+.judul-pelangi {
+  background: linear-gradient(90deg, #f43f5e, #f59e0b, #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
