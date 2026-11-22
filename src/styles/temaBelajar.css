@@ -66,3 +66,37 @@
   background-clip: text;
   color: transparent;
 }
+
+/* Tambahan di src/styles/temaBelajar.css */
+.slider-horizontal {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.slider-horizontal::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.slide-item-hp {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+
+@media (min-width: 768px) {
+  .slider-horizontal {
+    display: grid;
+    overflow-x: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+
+  .slide-item-hp {
+    flex: initial;
+  }
+}

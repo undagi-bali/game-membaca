@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Eye,
   EyeOff,
   Maximize2,
   Grid,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Shuffle,
+  RotateCcw,
   CheckCircle2,
   HelpCircle,
 } from "lucide-react";
@@ -15,17 +19,114 @@ import {
 } from "../data/dataMembaca";
 import SlotGambar from "./SlotGambar";
 
+// Fungsi bantu untuk mengacak array (Fisher-Yates)
+function acakArray(items) {
+  const salinan = [...items];
+  for (let i = salinan.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [salinan[i], salinan[j]] = [salinan[j], salinan[i]];
+  }
+  return salinan;
+}
+
 export default function GameMembaca({ onKembaliKeMenuGame }) {
   // 'menu' | 'vokal' | 'konsonan'
   const [modeBelajar, setModeBelajar] = useState("menu");
   const [konsonanTerpilih, setKonsonanTerpilih] = useState("B");
+
+  // State opsi tampilan
   const [tampilkanGambar, setTampilkanGambar] = useState(true);
   const [modeKartuBesar, setModeKartuBesar] = useState(false);
   const [kartuFokus, setKartuFokus] = useState(null);
 
+  // State urutan acak & indeks slide layar kecil
+  const [daftarVokalTampil, setDaftarVokalTampil] = useState(DATA_VOKAL);
+  const [daftarSukuKataTampil, setDaftarSukuKataTampil] = useState([]);
+  const [sedangDiacak, setSedangDiacak] = useState(false);
+  const [indeksSlide, setIndeksSlide] = useState(0);
+
+  const containerSlideRef = useRef(null);
+
   const dataKonsonanAktif =
     DATA_KONSONAN.find((item) => item.konsonanBesar === konsonanTerpilih) ||
     DATA_KONSONAN[0];
+
+  // Sinkronkan daftar suku kata saat konsonan berubah atau urutan direset
+  useEffect(() => {
+    setDaftarSukuKataTampil(dataKonsonanAktif.sukuKata);
+    setSedangDiacak(false);
+    setIndeksSlide(0);
+    if (containerSlideRef.current) {
+      containerSlideRef.current.scrollTo({ left: 0, behavior: "auto" });
+    }
+  }, [dataKonsonanAktif]);
+
+  // Reset indeks slide saat berpindah mode vokal/konsonan
+  useEffect(() => {
+    setIndeksSlide(0);
+    if (containerSlideRef.current) {
+      containerSlideRef.current.scrollTo({ left: 0, behavior: "auto" });
+    }
+  }, [modeBelajar]);
+
+  const itemAktifSekarang =
+    modeBelajar === "vokal" ? daftarVokalTampil : daftarSukuKataTampil;
+
+  const handleAcakUrutan = () => {
+    if (modeBelajar === "vokal") {
+      setDaftarVokalTampil((prev) => acakArray(prev));
+    } else if (modeBelajar === "konsonan") {
+      setDaftarSukuKataTampil((prev) => acakArray(prev));
+    }
+    setSedangDiacak(true);
+    setKartuFokus(null);
+    geserKeSlide(0);
+  };
+
+  const handleResetUrutan = () => {
+    if (modeBelajar === "vokal") {
+      setDaftarVokalTampil(DATA_VOKAL);
+    } else if (modeBelajar === "konsonan") {
+      setDaftarSukuKataTampil(dataKonsonanAktif.sukuKata);
+    }
+    setSedangDiacak(false);
+    setKartuFokus(null);
+    geserKeSlide(0);
+  };
+
+  const geserKeSlide = (targetIndex) => {
+    const total = itemAktifSekarang.length;
+    if (total === 0) return;
+    const clamped = Math.max(0, Math.min(targetIndex, total - 1));
+    setIndeksSlide(clamped);
+
+    if (containerSlideRef.current) {
+      const lebarSlide = containerSlideRef.current.clientWidth;
+      containerSlideRef.current.scrollTo({
+        left: clamped * (lebarSlide + 16),
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Update indikator slide saat pengguna menggeser jari (swipe) di layar kecil
+  const handleScrollSlide = () => {
+    if (!containerSlideRef.current) return;
+    const { scrollLeft, clientWidth } = containerSlideRef.current;
+    if (clientWidth <= 0) return;
+    const posisi = Math.round(scrollLeft / (clientWidth + 16));
+    if (
+      posisi !== indeksSlide &&
+      posisi >= 0 &&
+      posisi < itemAktifSekarang.length
+    ) {
+      setIndeksSlide(posisi);
+    }
+  };
+
+  const gridDesktopClass = modeKartuBesar
+    ? "md:grid-cols-2 lg:grid-cols-3"
+    : "md:grid-cols-3 lg:grid-cols-5";
 
   return (
     <div>
@@ -50,6 +151,25 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
 
         {modeBelajar !== "menu" && (
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* Tombol Acak Urutan */}
+            <button
+              onClick={handleAcakUrutan}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-100 hover:bg-violet-200 border-2 border-violet-400 text-violet-800 font-bold text-sm transition-all cursor-pointer"
+            >
+              <Shuffle className="w-4 h-4" /> Acak Urutan
+            </button>
+
+            {/* Tombol Kembalikan Urutan Asli */}
+            {sedangDiacak && (
+              <button
+                onClick={handleResetUrutan}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-300 text-slate-700 font-bold text-sm transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" /> Urutan Asli
+              </button>
+            )}
+
+            {/* Toggle Gambar */}
             <button
               onClick={() => setTampilkanGambar(!tampilkanGambar)}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer border-2 ${
@@ -69,9 +189,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
               )}
             </button>
 
+            {/* Toggle Kartu Besar */}
             <button
               onClick={() => setModeKartuBesar(!modeKartuBesar)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer border-2 ${
+              className={`hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer border-2 ${
                 modeKartuBesar
                   ? "bg-amber-100 border-amber-400 text-amber-800"
                   : "bg-slate-100 border-slate-300 text-slate-600"
@@ -91,7 +212,7 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
         )}
       </div>
 
-      {/* Pilihan Awal di dalam Game Membaca: Vokal vs Selain Vokal */}
+      {/* Pilihan Awal di dalam Game Membaca */}
       {modeBelajar === "menu" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto py-4">
           <button
@@ -149,32 +270,45 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
       {/* Halaman Vokal */}
       {modeBelajar === "vokal" && (
         <section>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">
-              Huruf Vokal: <span className="text-rose-500">A</span> -{" "}
-              <span className="text-sky-500">I</span> -{" "}
-              <span className="text-emerald-500">U</span> -{" "}
-              <span className="text-amber-500">E</span> -{" "}
-              <span className="text-purple-500">O</span>
+          <div className="text-center mb-5">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-wide">
+              {daftarVokalTampil.map((v, idx) => {
+                const warna = [
+                  "text-rose-500",
+                  "text-sky-500",
+                  "text-emerald-500",
+                  "text-amber-500",
+                  "text-purple-500",
+                ][idx % 5];
+                return (
+                  <React.Fragment key={v.id}>
+                    <span className={warna}>{v.hurufBesar}</span>
+                    {idx < daftarVokalTampil.length - 1 && (
+                      <span className="text-slate-400 mx-1">-</span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 md:hidden">
+              Geser ke samping atau tekan panah untuk melihat huruf berikutnya
+            </p>
           </div>
 
           <div
-            className={`grid gap-5 sm:gap-6 ${
-              modeKartuBesar
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
-            }`}
+            ref={containerSlideRef}
+            onScroll={handleScrollSlide}
+            className={`slider-horizontal gap-5 sm:gap-6 ${gridDesktopClass}`}
           >
-            {DATA_VOKAL.map((item) => {
+            {daftarVokalTampil.map((item) => {
               const sedangFokus = kartuFokus === item.id;
               return (
                 <div
                   key={item.id}
                   onClick={() => setKartuFokus(sedangFokus ? null : item.id)}
-                  className={`kartu-ceria kartu-game-pilihan rounded-3xl p-5 border-4 cursor-pointer flex flex-col justify-between text-center ${
+                  className={`slide-item-hp kartu-ceria kartu-game-pilihan rounded-3xl p-6 md:p-5 border-4 cursor-pointer flex flex-col justify-between text-center ${
                     item.warnaKartu
-                  } ${sedangFokus ? "ring-4 ring-amber-300 scale-[1.02]" : ""}`}
+                  } ${sedangFokus ? "ring-4 ring-amber-300" : ""}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span
@@ -187,18 +321,18 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
                     )}
                   </div>
 
-                  <div className="my-2 flex items-baseline justify-center gap-2">
+                  <div className="my-3 md:my-2 flex items-baseline justify-center gap-3 md:gap-2">
                     <span
-                      className={`font-bold leading-none ${
-                        modeKartuBesar ? "text-7xl" : "text-6xl"
+                      className={`font-bold leading-none text-8xl ${
+                        modeKartuBesar ? "md:text-7xl" : "md:text-6xl"
                       }`}
                     >
                       {item.hurufBesar}
                     </span>
                     <span
-                      className={`font-bold leading-none ${item.warnaTeksKecil} ${
-                        modeKartuBesar ? "text-6xl" : "text-5xl"
-                      }`}
+                      className={`font-bold leading-none text-7xl ${
+                        item.warnaTeksKecil
+                      } ${modeKartuBesar ? "md:text-6xl" : "md:text-5xl"}`}
                     >
                       {item.hurufKecil}
                     </span>
@@ -210,11 +344,11 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
                     tampilkanGambar={tampilkanGambar}
                   />
 
-                  <div className="mt-2 bg-white/85 rounded-2xl py-2 px-3 border border-white">
+                  <div className="mt-3 md:mt-2 bg-white/85 rounded-2xl py-2.5 px-3 border border-white">
                     <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">
                       Contoh Kata
                     </span>
-                    <span className="text-xl sm:text-2xl font-bold text-slate-800">
+                    <span className="text-2xl md:text-xl font-bold text-slate-800">
                       {item.kataContoh}
                     </span>
                   </div>
@@ -222,6 +356,15 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
               );
             })}
           </div>
+
+          {/* Kontrol Navigasi Slide Khusus Layar Kecil */}
+          <NavigasiSlideHP
+            indeks={indeksSlide}
+            total={daftarVokalTampil.length}
+            onPrev={() => geserKeSlide(indeksSlide - 1)}
+            onNext={() => geserKeSlide(indeksSlide + 1)}
+            onPilih={geserKeSlide}
+          />
         </section>
       )}
 
@@ -280,18 +423,19 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
               </span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-wide">
-              {dataKonsonanAktif.sukuKata.map((s) => s.besar).join(" - ")}
+              {daftarSukuKataTampil.map((s) => s.besar).join(" - ")}
             </h3>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 md:hidden">
+              Geser ke samping atau tekan panah untuk fokus satu suku kata
+            </p>
           </div>
 
           <div
-            className={`grid gap-5 sm:gap-6 ${
-              modeKartuBesar
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
-            }`}
+            ref={containerSlideRef}
+            onScroll={handleScrollSlide}
+            className={`slider-horizontal gap-5 sm:gap-6 ${gridDesktopClass}`}
           >
-            {dataKonsonanAktif.sukuKata.map((suku, idx) => {
+            {daftarSukuKataTampil.map((suku, idx) => {
               const tema =
                 TEMA_WARNA_SUKU_KATA[idx % TEMA_WARNA_SUKU_KATA.length];
               const idKartu = `${dataKonsonanAktif.konsonanBesar}-${suku.besar}`;
@@ -301,9 +445,9 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
                 <div
                   key={idKartu}
                   onClick={() => setKartuFokus(sedangFokus ? null : idKartu)}
-                  className={`kartu-ceria kartu-game-pilihan rounded-3xl p-5 border-4 cursor-pointer flex flex-col justify-between text-center ${
+                  className={`slide-item-hp kartu-ceria kartu-game-pilihan rounded-3xl p-6 md:p-5 border-4 cursor-pointer flex flex-col justify-between text-center ${
                     tema.kartu
-                  } ${sedangFokus ? "ring-4 ring-amber-300 scale-[1.02]" : ""}`}
+                  } ${sedangFokus ? "ring-4 ring-amber-300" : ""}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span
@@ -316,18 +460,18 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
                     )}
                   </div>
 
-                  <div className="my-2 flex items-baseline justify-center gap-2">
+                  <div className="my-3 md:my-2 flex items-baseline justify-center gap-3 md:gap-2">
                     <span
-                      className={`font-bold leading-none ${tema.hurufBesar} ${
-                        modeKartuBesar ? "text-6xl" : "text-5xl"
-                      }`}
+                      className={`font-bold leading-none text-7xl ${
+                        tema.hurufBesar
+                      } ${modeKartuBesar ? "md:text-6xl" : "md:text-5xl"}`}
                     >
                       {suku.besar}
                     </span>
                     <span
-                      className={`font-bold leading-none ${tema.hurufKecil} ${
-                        modeKartuBesar ? "text-5xl" : "text-4xl"
-                      }`}
+                      className={`font-bold leading-none text-6xl ${
+                        tema.hurufKecil
+                      } ${modeKartuBesar ? "md:text-5xl" : "md:text-4xl"}`}
                     >
                       {suku.kecil}
                     </span>
@@ -339,11 +483,11 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
                     tampilkanGambar={tampilkanGambar}
                   />
 
-                  <div className="mt-2 bg-white/85 rounded-2xl py-2 px-3 border border-white">
+                  <div className="mt-3 md:mt-2 bg-white/85 rounded-2xl py-2.5 px-3 border border-white">
                     <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block">
                       Contoh Kata
                     </span>
-                    <span className="text-xl font-bold text-slate-800">
+                    <span className="text-2xl md:text-xl font-bold text-slate-800">
                       {suku.kataContoh}
                     </span>
                   </div>
@@ -351,6 +495,15 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
               );
             })}
           </div>
+
+          {/* Kontrol Navigasi Slide Khusus Layar Kecil */}
+          <NavigasiSlideHP
+            indeks={indeksSlide}
+            total={daftarSukuKataTampil.length}
+            onPrev={() => geserKeSlide(indeksSlide - 1)}
+            onNext={() => geserKeSlide(indeksSlide + 1)}
+            onPilih={geserKeSlide}
+          />
         </section>
       )}
 
@@ -358,21 +511,56 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
       <footer className="mt-10 kartu-ceria p-4 sm:p-5 border-2 border-amber-200 flex items-start sm:items-center gap-3 text-sm text-slate-600">
         <HelpCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
         <p>
-          <strong>Tips:</strong> Taruh gambar di{" "}
-          <code className="bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-700">
-            public/images/
-          </code>{" "}
-          lalu isi{" "}
-          <code className="bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-700">
-            gambarUrl
-          </code>{" "}
-          di{" "}
-          <code className="bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-700">
-            src/data/dataMembaca.js
-          </code>
-          .
+          <strong>Tips:</strong> Di layar kecil, kartu bisa digeser ke samping
+          atau dipindah dengan tombol panah. Gunakan{" "}
+          <strong>Acak Urutan</strong> untuk melatih anak membaca urutan acak.
         </p>
       </footer>
+    </div>
+  );
+}
+
+// Komponen navigasi slide khusus layar kecil (< md)
+function NavigasiSlideHP({ indeks, total, onPrev, onNext, onPilih }) {
+  if (total === 0) return null;
+
+  return (
+    <div className="flex md:hidden items-center justify-between gap-3 mt-4 kartu-ceria p-3 border-2 border-slate-200">
+      <button
+        onClick={onPrev}
+        disabled={indeks === 0}
+        aria-label="Kartu sebelumnya"
+        className="tombol-3d w-11 h-11 rounded-2xl bg-amber-400 disabled:bg-slate-200 disabled:border-slate-300 border-amber-600 text-slate-900 disabled:text-slate-400 flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      <div className="flex flex-col items-center gap-1.5">
+        <span className="text-xs font-bold text-slate-600">
+          Huruf {indeks + 1} dari {total}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: total }).map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => onPilih(idx)}
+              aria-label={`Ke kartu ${idx + 1}`}
+              className={`h-2.5 rounded-full transition-all cursor-pointer ${
+                idx === indeks ? "w-6 bg-rose-500" : "w-2.5 bg-slate-300"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <button
+        onClick={onNext}
+        disabled={indeks === total - 1}
+        aria-label="Kartu berikutnya"
+        className="tombol-3d w-11 h-11 rounded-2xl bg-amber-400 disabled:bg-slate-200 disabled:border-slate-300 border-amber-600 text-slate-900 disabled:text-slate-400 flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
     </div>
   );
 }
