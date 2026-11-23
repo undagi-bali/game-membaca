@@ -369,7 +369,7 @@ export const DATA_KONSONAN = [
         besar: "LU",
         kecil: "lu",
         kataContoh: "Lumba-lumba",
-        gambarUrl: "/images/lumba-lumba.png",
+        gambarUrl: "/images/lumba.png",
       },
       {
         besar: "LE",
@@ -547,8 +547,8 @@ export const DATA_KONSONAN = [
       {
         besar: "RI",
         kecil: "ri",
-        kataContoh: "Rusa",
-        gambarUrl: "/images/rusa.png",
+        kataContoh: "Riak",
+        gambarUrl: "/images/riak.png",
       },
       {
         besar: "RU",
@@ -659,7 +659,7 @@ export const DATA_KONSONAN = [
         besar: "VI",
         kecil: "vi",
         kataContoh: "Villa",
-        gambarUrl: "/images/villa.png",
+        gambarUrl: "/images/vila.png",
       },
       {
         besar: "VU",

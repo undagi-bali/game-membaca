@@ -10,7 +10,6 @@ import {
   Shuffle,
   RotateCcw,
   CheckCircle2,
-  HelpCircle,
 } from "lucide-react";
 import {
   DATA_VOKAL,
@@ -18,6 +17,7 @@ import {
   TEMA_WARNA_SUKU_KATA,
 } from "../data/dataMembaca";
 import SlotGambar from "./SlotGambar";
+import { mainkanSuaraTombol } from "../utils/suaraTombol";
 
 // Fungsi bantu untuk mengacak array (Fisher-Yates)
 function acakArray(items) {
@@ -29,7 +29,10 @@ function acakArray(items) {
   return salinan;
 }
 
-export default function GameMembaca({ onKembaliKeMenuGame }) {
+export default function GameMembaca({
+  onKembaliKeMenuGame,
+  suaraAktif = true,
+}) {
   // 'menu' | 'vokal' | 'konsonan'
   const [modeBelajar, setModeBelajar] = useState("menu");
   const [konsonanTerpilih, setKonsonanTerpilih] = useState("B");
@@ -44,6 +47,12 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
   const [daftarSukuKataTampil, setDaftarSukuKataTampil] = useState([]);
   const [sedangDiacak, setSedangDiacak] = useState(false);
   const [indeksSlide, setIndeksSlide] = useState(0);
+
+  const bunyi = (jenis = "klik") => {
+    if (suaraAktif) {
+      mainkanSuaraTombol(jenis);
+    }
+  };
 
   const containerSlideRef = useRef(null);
 
@@ -73,6 +82,7 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
     modeBelajar === "vokal" ? daftarVokalTampil : daftarSukuKataTampil;
 
   const handleAcakUrutan = () => {
+    bunyi("acak");
     if (modeBelajar === "vokal") {
       setDaftarVokalTampil((prev) => acakArray(prev));
     } else if (modeBelajar === "konsonan") {
@@ -84,6 +94,7 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
   };
 
   const handleResetUrutan = () => {
+    bunyi("kembali");
     if (modeBelajar === "vokal") {
       setDaftarVokalTampil(DATA_VOKAL);
     } else if (modeBelajar === "konsonan") {
@@ -134,6 +145,7 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
       <div className="flex flex-wrap items-center justify-between gap-3 kartu-ceria p-3.5 border-2 border-slate-200 mb-6">
         <button
           onClick={() => {
+            bunyi("kembali");
             if (modeBelajar === "menu") {
               onKembaliKeMenuGame();
             } else {
@@ -171,7 +183,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
 
             {/* Toggle Gambar */}
             <button
-              onClick={() => setTampilkanGambar(!tampilkanGambar)}
+              onClick={() => {
+                bunyi("klik");
+                setTampilkanGambar(!tampilkanGambar);
+              }}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer border-2 ${
                 tampilkanGambar
                   ? "bg-emerald-100 border-emerald-400 text-emerald-700"
@@ -191,7 +206,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
 
             {/* Toggle Kartu Besar */}
             <button
-              onClick={() => setModeKartuBesar(!modeKartuBesar)}
+              onClick={() => {
+                bunyi("klik");
+                setModeKartuBesar(!modeKartuBesar);
+              }}
               className={`hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer border-2 ${
                 modeKartuBesar
                   ? "bg-amber-100 border-amber-400 text-amber-800"
@@ -216,7 +234,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
       {modeBelajar === "menu" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto py-4">
           <button
-            onClick={() => setModeBelajar("vokal")}
+            onClick={() => {
+              bunyi("klik");
+              setModeBelajar("vokal");
+            }}
             className="group relative kartu-ceria kartu-game-pilihan p-7 sm:p-8 text-left border-4 border-rose-300 hover:border-rose-500 cursor-pointer overflow-hidden"
           >
             <span className="inline-block bg-rose-500 text-white text-sm font-bold px-4 py-1 rounded-full mb-4 shadow-sm">
@@ -241,7 +262,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
           </button>
 
           <button
-            onClick={() => setModeBelajar("konsonan")}
+            onClick={() => {
+              bunyi("klik");
+              setModeBelajar("konsonan");
+            }}
             className="group relative kartu-ceria kartu-game-pilihan p-7 sm:p-8 text-left border-4 border-sky-300 hover:border-sky-500 cursor-pointer overflow-hidden"
           >
             <span className="inline-block bg-sky-500 text-white text-sm font-bold px-4 py-1 rounded-full mb-4 shadow-sm">
@@ -305,7 +329,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
               return (
                 <div
                   key={item.id}
-                  onClick={() => setKartuFokus(sedangFokus ? null : item.id)}
+                  onClick={() => {
+                    bunyi("klik");
+                    setKartuFokus(sedangFokus ? null : item.id);
+                  }}
                   className={`slide-item-hp kartu-ceria kartu-game-pilihan rounded-3xl p-6 md:p-5 border-4 cursor-pointer flex flex-col justify-between text-center ${
                     item.warnaKartu
                   } ${sedangFokus ? "ring-4 ring-amber-300" : ""}`}
@@ -361,9 +388,18 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
           <NavigasiSlideHP
             indeks={indeksSlide}
             total={daftarVokalTampil.length}
-            onPrev={() => geserKeSlide(indeksSlide - 1)}
-            onNext={() => geserKeSlide(indeksSlide + 1)}
-            onPilih={geserKeSlide}
+            onPrev={() => {
+              bunyi("klik");
+              geserKeSlide(indeksSlide - 1);
+            }}
+            onNext={() => {
+              bunyi("klik");
+              geserKeSlide(indeksSlide + 1);
+            }}
+            onPilih={(idx) => {
+              bunyi("klik");
+              geserKeSlide(idx);
+            }}
           />
         </section>
       )}
@@ -391,6 +427,7 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
                   <button
                     key={konsonan.konsonanBesar}
                     onClick={() => {
+                      bunyi("klik");
                       setKonsonanTerpilih(konsonan.konsonanBesar);
                       setKartuFokus(null);
                     }}
@@ -444,7 +481,10 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
               return (
                 <div
                   key={idKartu}
-                  onClick={() => setKartuFokus(sedangFokus ? null : idKartu)}
+                  onClick={() => {
+                    bunyi("klik");
+                    setKartuFokus(sedangFokus ? null : idKartu);
+                  }}
                   className={`slide-item-hp kartu-ceria kartu-game-pilihan rounded-3xl p-6 md:p-5 border-4 cursor-pointer flex flex-col justify-between text-center ${
                     tema.kartu
                   } ${sedangFokus ? "ring-4 ring-amber-300" : ""}`}
@@ -500,22 +540,21 @@ export default function GameMembaca({ onKembaliKeMenuGame }) {
           <NavigasiSlideHP
             indeks={indeksSlide}
             total={daftarSukuKataTampil.length}
-            onPrev={() => geserKeSlide(indeksSlide - 1)}
-            onNext={() => geserKeSlide(indeksSlide + 1)}
-            onPilih={geserKeSlide}
+            onPrev={() => {
+              bunyi("klik");
+              geserKeSlide(indeksSlide - 1);
+            }}
+            onNext={() => {
+              bunyi("klik");
+              geserKeSlide(indeksSlide + 1);
+            }}
+            onPilih={(idx) => {
+              bunyi("klik");
+              geserKeSlide(idx);
+            }}
           />
         </section>
       )}
-
-      {/* Catatan Bantuan */}
-      <footer className="mt-10 kartu-ceria p-4 sm:p-5 border-2 border-amber-200 flex items-start sm:items-center gap-3 text-sm text-slate-600">
-        <HelpCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
-        <p>
-          <strong>Tips:</strong> Di layar kecil, kartu bisa digeser ke samping
-          atau dipindah dengan tombol panah. Gunakan{" "}
-          <strong>Acak Urutan</strong> untuk melatih anak membaca urutan acak.
-        </p>
-      </footer>
     </div>
   );
 }
