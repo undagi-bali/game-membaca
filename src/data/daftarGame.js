@@ -15,12 +15,12 @@ export const DAFTAR_GAME = [
     },
   },
   {
-    id: "game-kedua",
+    id: "berhitung",
     badge: "Game 2",
-    judul: "Game Berikutnya",
+    judul: "Game Berhitung",
     deskripsi:
-      "Siap ditambahkan untuk permainan edukasi lain (misalnya berhitung, mencocokkan gambar, atau warna).",
-    pratinjau: ["123", "★", "🎨", "🧩"],
+      "Latihan aritmetika dasar dengan gambar dan angka: Penjumlahan, Pengurangan, dan Genap Ganjil.",
+    pratinjau: ["+", "-", "2-4-6", "1-3-5"],
     tema: {
       kartu: "border-sky-300 hover:border-sky-500",
       lingkaran: "bg-sky-100",

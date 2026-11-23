@@ -3,12 +3,12 @@ import { BookOpen, Volume2, VolumeX } from "lucide-react";
 import "./styles/temaBelajar.css";
 import MenuPilihGame from "./components/MenuPilihGame";
 import GameMembaca from "./components/GameMembaca";
-import PlaceholderGameLain from "./components/PlaceholderGameLain";
+import GameBerhitung from "./components/GameBerhitung";
 import FooterAplikasi from "./components/FooterAplikasi";
 import { mainkanSuaraTombol } from "./utils/suaraTombol";
 
 export default function App() {
-  // 'menu-game' | 'membaca' | 'game-kedua'
+  // 'menu-game' | 'membaca' | 'berhitung'
   const [gameAktif, setGameAktif] = useState("menu-game");
   const [suaraAktif, setSuaraAktif] = useState(true);
 
@@ -26,7 +26,6 @@ export default function App() {
   return (
     <div className="tema-belajar-wrapper">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Header Bersama */}
         <header className="kartu-ceria p-4 sm:p-5 border-4 border-amber-200 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div
             onClick={() => {
@@ -74,7 +73,17 @@ export default function App() {
               Game Membaca
             </button>
 
-            {/* Tombol Aktifkan / Matikan Suara Tombol */}
+            <button
+              onClick={() => handlePilihGame("berhitung")}
+              className={`tombol-3d px-4 py-2 rounded-2xl font-bold text-sm cursor-pointer ${
+                gameAktif === "berhitung"
+                  ? "bg-sky-500 text-white border-sky-700"
+                  : "bg-sky-100 text-sky-600 border-sky-300 hover:bg-sky-200"
+              }`}
+            >
+              Game Berhitung
+            </button>
+
             <button
               onClick={() => {
                 const statusBaru = !suaraAktif;
@@ -105,7 +114,6 @@ export default function App() {
           </div>
         </header>
 
-        {/* Konten Utama */}
         {gameAktif === "menu-game" && (
           <MenuPilihGame onPilihGame={handlePilihGame} />
         )}
@@ -120,17 +128,19 @@ export default function App() {
           />
         )}
 
-        {gameAktif !== "menu-game" && gameAktif !== "membaca" && (
-          <PlaceholderGameLain
-            onKembali={() => {
+        {gameAktif === "berhitung" && (
+          <GameBerhitung
+            suaraAktif={suaraAktif}
+            onKembaliKeMenuGame={() => {
               bunyikan("kembali");
               setGameAktif("menu-game");
             }}
           />
         )}
 
-        {/* Footer Terpisah */}
-        <FooterAplikasi namaAplikasi="Dunia Main & Belajar" tahun={2026} />
+        {gameAktif === "menu-game" && (
+          <FooterAplikasi namaAplikasi="Dunia Main & Belajar" tahun={2026} />
+        )}
       </div>
     </div>
   );
